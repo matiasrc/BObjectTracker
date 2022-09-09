@@ -18,8 +18,6 @@ void ofApp::setup() {
     //deviceID            = 1;
     deviceName          = "NO DEVICE AVAILABLE";
 
-    //hMirror             = false; // en el XML
-    //vMirror             = false; // en el XML
        
     isOneDeviceAvailable =  false;
     

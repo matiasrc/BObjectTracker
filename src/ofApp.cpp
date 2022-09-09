@@ -17,7 +17,6 @@ void ofApp::setup() {
     camHeight           = 480;
     //deviceID            = 1;
     deviceName          = "NO DEVICE AVAILABLE";
-
        
     isOneDeviceAvailable =  false;
     

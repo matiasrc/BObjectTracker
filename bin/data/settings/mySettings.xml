@@ -2,7 +2,7 @@
     <PUERTO>12345</PUERTO>
     <HOST>127.0.0.1</HOST>
     <ETIQUETA>
-        <DATOS>/bfacetracker/datos</DATOS>
+        <DATOS>/bobjecttracker/datos</DATOS>
     </ETIQUETA>
     <ENVIARBLOBS>1</ENVIARBLOBS>
 </OSC>

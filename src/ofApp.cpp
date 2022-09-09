@@ -263,7 +263,7 @@ void ofApp::saveSettings(){
     XML.setValue("OSC:PUERTO", puerto);
     XML.setValue("OSC:HOST", host);
     XML.setValue("OSC:ETIQUETA:DATOS", etiquetaMensajeDatos);
-    XML.setValue("OSC:ENVIARBLOBS", enviarDatos);
+    XML.setValue("OSC:ENVIARDATOS", enviarDatos);
     
     //---------------- CAM --------------------
     XML.setValue("CAM:DEVICEID", deviceID);

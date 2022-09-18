@@ -22,4 +22,4 @@ ofxXmlSettings (included in Of Core)
 - calibración (Quad Warping) de la imagen de entrada
 
 ## PRE REALISES ##
-[Binaries / ejecutables](https://github.com/matiasrc/BBObjectTracker/releases) OSX & Win 64bit
+[Binaries / ejecutables](https://github.com/matiasrc/BObjectTracker/releases) OSX & Win 64bit

@@ -57,7 +57,7 @@ void ofApp::setup() {
     
     objectsNumber = 0;
     //----------------- GUI -------------------
-    //required call
+
     gui.setup();
     
     ImGui::GetIO().MouseDrawCursor = false;

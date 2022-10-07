@@ -1,0 +1,10 @@
+.DS_Store
+*.swp
+*~.nib
+
+bin/BObjectTracker.app
+xcuserdata
+
+*.pbxuser
+*.perspective
+*.perspectivev3

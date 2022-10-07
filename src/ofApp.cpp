@@ -21,8 +21,15 @@ void ofApp::setup() {
     isOneDeviceAvailable =  false;
     
     setupCam(deviceID);
+
+    //----------------- WARP -------------------
+    warpON =  false;
+    cualPunto = 0;
     
-    imitate(camPixels, cam);
+    moverPunto = false;
+        
+    mirroredImg.allocate(camWidth,camHeight);
+    warpedImg.allocate(camWidth,camHeight);
     
     //----------------- OBJECT FINDER -------------------
     ofDirectory dataDirectory(ofToDataPath("", true));
@@ -43,7 +50,6 @@ void ofApp::setup() {
         }
     }
     
-    
     cascadeFile = fileNames[fileID];
     finder.setup(cascadeFile);
     
@@ -61,9 +67,7 @@ void ofApp::setup() {
     gui.setup();
     
     ImGui::GetIO().MouseDrawCursor = false;
-        
-    fullScreen = false;
-    
+            
     //----------------- OSC -------------------
     sender.setup(host, puerto);
 }
@@ -75,13 +79,15 @@ void ofApp::update() {
     float h = ofGetHeight();
     
 	if(cam.isFrameNew()) {
+                
+        mirroredImg.setFromPixels(cam.getPixels());
+        mirroredImg.mirror(vMirror, hMirror);
         
-        copy(cam, camPixels);
-        
-        camPixels.mirror(vMirror, hMirror);
+        warpedImg = mirroredImg;
+        warpedImg.warpPerspective(warp[0], warp[1], warp[2], warp[3]);
         
         //------- OBJETC FINDER ---------
-        finder.update(camPixels);
+        finder.update(warpedImg);
         
         objectsNumber = finder.size();
         
@@ -115,7 +121,7 @@ void ofApp::update() {
             }
         }
     }
-    ofSetFullscreen(fullScreen);
+    warpingReset();
 }
 
 void ofApp::draw() {
@@ -125,7 +131,12 @@ void ofApp::draw() {
     float w = ofGetWidth();
     float h = ofGetHeight();
     
-    camPixels.draw(0, 0, w, h);
+   if(imageView == 0){
+        mirroredImg.draw(0, 0, w, h);
+    }
+    else if(imageView == 1){
+        warpedImg.draw(0, 0, w, h);
+    }
     
     ofPushStyle();
     ofNoFill();
@@ -149,6 +160,39 @@ void ofApp::draw() {
     }
     
     ofPopStyle();
+    
+    if(warpON){
+        ofPushStyle();
+        ofFill();
+        ofPolyline pl;
+        
+        float cornerSize = 15;
+        
+        for(int i=0; i<4; i++){
+            float x = warp[i].x / camWidth * w;
+            float y = (warp[i].y / camHeight * h);
+        
+            pl.addVertex(x, y);
+            
+            corner[i].setFromCenter(x, y, cornerSize, cornerSize);
+            
+            ofFill();
+            //ofDrawCircle(x, y, 5);
+            if(i == cualPunto){
+                ofSetColor(255, 0, 0);
+            }else{
+                ofSetColor(0, 255, 255);
+            }
+            ofDrawRectangle(corner[i]);
+        }
+        ofSetColor(0, 255, 255);
+        pl.close();
+        pl.draw();
+        
+        ofDrawBitmapStringHighlight("Deformación de entrada activada, presionad tecla w para salir", 5, ofGetHeight() - 25, ofColor(255,0, 0));
+
+        ofPopStyle();
+    }
     
     drawGui();
     
@@ -207,12 +251,12 @@ void ofApp::enviarOsc(string etiqueta, vector<float> valores){
     sender.sendMessage(m, false);
     /*
      [0] --> object ID
-     [1] --> blob velocity X
-     [2] --> blob velocity Y
-     [3] --> blob bounding rect X
-     [4] --> blob bounding rect Y
-     [5] --> blob bounding rect Width
-     [6] --> blob bounding rect Height
+     [1] --> object velocity X
+     [2] --> object velocity Y
+     [3] --> object bounding rect X
+     [4] --> object bounding rect Y
+     [5] --> object bounding rect Width
+     [6] --> object bounding rect Height
     */
     
 }
@@ -247,6 +291,17 @@ void ofApp::loadSettings(){
     hMirror = XML.getValue("CAM:HMIRROR", false);
     vMirror = XML.getValue("CAM:VMIRROR", false);
     
+    paso = XML.getValue("CAM:WARPING:PASO", 5);
+    
+    warp[0].x = XML.getValue("CAM:WARPING:AX", 0);
+    warp[0].y = XML.getValue("CAM:WARPING:Ay", 0);
+    warp[1].x = XML.getValue("CAM:WARPING:BX", camWidth);
+    warp[1].y = XML.getValue("CAM:WARPING:BY", 0);
+    warp[2].x = XML.getValue("CAM:WARPING:CX", camWidth);
+    warp[2].y = XML.getValue("CAM:WARPING:CY", camHeight);
+    warp[3].x = XML.getValue("CAM:WARPING:DX", 0);
+    warp[3].y = XML.getValue("CAM:WARPING:DY", camHeight);
+    
     //---------------- OBJECT FINDER --------------------
     fileID = XML.getValue("OBJECTFINDER:FILEID", 0);
     preset = XML.getValue("OBJECTFINDER:PRESET", 0);
@@ -269,6 +324,16 @@ void ofApp::saveSettings(){
     XML.setValue("CAM:DEVICEID", deviceID);
     XML.setValue("CAM:HMIRROR", hMirror);
     XML.setValue("CAM:VMIRROR", vMirror);
+    
+    XML.setValue("CAM:WARPING:PASO", paso);
+    XML.setValue("CAM:WARPING:AX", warp[0].x);
+    XML.setValue("CAM:WARPING:Ay", warp[0].y);
+    XML.setValue("CAM:WARPING:BX", warp[1].x);
+    XML.setValue("CAM:WARPING:BY", warp[1].y);
+    XML.setValue("CAM:WARPING:CX", warp[2].x);
+    XML.setValue("CAM:WARPING:CY", warp[2].y);
+    XML.setValue("CAM:WARPING:DX", warp[3].x);
+    XML.setValue("CAM:WARPING:DY", warp[3].y);
     
     //---------------- OBJECT FINDER --------------------
     XML.setValue("OBJECTFINDER:FILEID", fileID);
@@ -293,8 +358,36 @@ void ofApp::keyPressed(ofKeyEventArgs& e){
     }
     
     #endif
-    else if(e.key == 'f'){
-        fullScreen = !fullScreen;
+    else if(e.key == '1'){
+        cualPunto = 0;
+    }
+    else if(e.key == '2'){
+        cualPunto = 1;
+    }
+    else if(e.key == '3'){
+        cualPunto = 2;
+    }
+    else if(e.key == '4'){
+        cualPunto = 3;
+    }
+    else if(e.key == 'w'){
+        warpON = !warpON;
+    }
+    else if(e.key == OF_KEY_LEFT && warpON){
+        warp[cualPunto].x -= paso;
+        warp[cualPunto].x = ofClamp(warp[cualPunto].x, 0, camWidth);
+    }
+    else if(e.key == OF_KEY_RIGHT && warpON){
+        warp[cualPunto].x += paso;
+        warp[cualPunto].x = ofClamp(warp[cualPunto].x, 0, camWidth);
+    }
+    else if(e.key == OF_KEY_UP && warpON){
+        warp[cualPunto].y -= paso;
+        warp[cualPunto].y = ofClamp(warp[cualPunto].y, 0, camHeight);
+    }
+    else if(e.key == OF_KEY_DOWN && warpON){
+        warp[cualPunto].y += paso;
+        warp[cualPunto].y = ofClamp(warp[cualPunto].y, 0, camHeight);
     }
 }
 
@@ -302,7 +395,46 @@ void ofApp::keyPressed(ofKeyEventArgs& e){
 void ofApp::keyReleased(ofKeyEventArgs& e){
 
 }
+//--------------------------------------------------------------
+void ofApp::mousePressed(int x, int y, int button){
+    if(warpON){
+        for(int i=0; i<4; i++){
+            if(corner[i].inside(x, y)){
+                cualPunto = i;
+                moverPunto = true;
+                break;
+            }
+        }
+    }
+}
+//--------------------------------------------------------------
+void ofApp::mouseDragged(int x, int y, int button){
+    if(moverPunto){
+        if(x >= 0 && x<= ofGetWidth() && y>=0 && y <=ofGetHeight()){
+            warp[cualPunto].x = ofMap(x, 0, ofGetWidth(), 0, camWidth);
+            warp[cualPunto].y = ofMap(y, 0, ofGetHeight(), 0, camHeight);
+        }
+    }
+}
 
-void ofApp::mousePressed(int x, int y, int button) {
+//--------------------------------------------------------------
+void ofApp::mouseReleased(int x, int y, int button){
+    moverPunto = false;
+}
+
+//--------------------------------------------------------------
+void ofApp::warpingReset(){
     
+    if(resetWarping){
+        A = ofPoint(0, 0);
+        B = ofPoint(camWidth, 0);
+        C = ofPoint(camWidth, camHeight);
+        D = ofPoint(0, camHeight);
+        
+        warp[0] = A;
+        warp[1] = B;
+        warp[2] = C;
+        warp[3] = D;
+        resetWarping = false;
+    }
 }

@@ -17,11 +17,15 @@ public:
     void setupCam(int devID);
     void resetCameraSettings(int devID);
     void mousePressed(int x, int y, int button);
+    void mouseReleased(int x, int y, int button);
+    void mouseDragged(int x, int y, int button);
 
-	
+	//----------------- VIEW -------------------
+    int                     imageView;
     //----------------- CAM -------------------
     ofVideoGrabber          cam;
-    ofImage                 camPixels;
+    ofxCvColorImage         mirroredImg;
+    ofxCvColorImage         warpedImg;
     vector<ofVideoDevice>   wdevices;
     vector<string>          devicesVector;
     vector<int>             devicesID;
@@ -32,6 +36,16 @@ public:
     bool                    isOneDeviceAvailable;
     bool                    hMirror, vMirror;
     
+    //----------------- WARP -------------------
+    bool                    warpON;
+    ofPoint                 warp[4];
+    ofRectangle             corner[4];
+    ofPoint                 A, B, C, D;
+    int                     cualPunto;
+    bool                    moverPunto;
+    int                     paso;
+    bool                    resetWarping;
+    void                    warpingReset();
     
     //----------------- OBJECT FINDER -------------------
     ofxCv::ObjectFinder     finder;
@@ -42,9 +56,8 @@ public:
     int                     objectsNumber;
     int                     preset;
     //----------------- GUI -------------------
-    void drawGui();
-    ofxImGui::Gui gui;
-    bool fullScreen;
+    void                    drawGui();
+    ofxImGui::Gui           gui;
         
     //----------------- OSC -------------------
     ofxOscSender sender;

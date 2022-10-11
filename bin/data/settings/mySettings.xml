@@ -4,12 +4,23 @@
     <ETIQUETA>
         <DATOS>/bobjecttracker/datos</DATOS>
     </ETIQUETA>
-    <ENVIARBLOBS>1</ENVIARBLOBS>
+    <ENVIARDATOS>1</ENVIARDATOS>
 </OSC>
 <CAM>
     <DEVICEID>1</DEVICEID>
     <HMIRROR>1</HMIRROR>
     <VMIRROR>0</VMIRROR>
+    <WARPING>
+        <PASO>5</PASO>
+        <AX>0.000000000</AX>
+        <Ay>0.000000000</Ay>
+        <BX>640.000000000</BX>
+        <BY>0.000000000</BY>
+        <CX>640.000000000</CX>
+        <CY>480.000000000</CY>
+        <DX>0.000000000</DX>
+        <DY>480.000000000</DY>
+    </WARPING>
 </CAM>
 <OBJECTFINDER>
     <FILEID>7</FILEID>
